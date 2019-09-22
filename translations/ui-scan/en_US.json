@@ -1,0 +1,9 @@
+{
+  "meta.title": "Scan",
+  "scanItems": "Scan items...",
+  "scanButton": "Scan",
+  "op.changeStatus": "Change request status to...",
+  "op.slip": "Print request slip",
+  "status.received": "Item received",
+  "status.sent": "Item sent"
+}
