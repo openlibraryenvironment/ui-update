@@ -1,6 +1,5 @@
 import React, { useState } from 'react';
 import { FormattedMessage } from 'react-intl';
-import { hot } from 'react-hot-loader';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import classNames from 'classnames';
@@ -105,4 +104,4 @@ const ScanRoute = () => {
   );
 };
 
-export default hot(module)(ScanRoute);
+export default ScanRoute;
