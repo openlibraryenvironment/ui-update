@@ -1,14 +1,14 @@
 import React, { useState } from 'react';
+import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import classNames from 'classnames';
 import { Layout, Row, Col, Select, TextField, List, Card } from '@folio/stripes/components';
+import { stripesConnect } from '@folio/stripes/core';
 import css from './ScanRoute.css';
 
-const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
-
-const ScanRoute = () => {
+const ScanRoute = props => {
   // Unfortunately, it doesn't seem to be readily possible to initialise at the field level.
   // So either we put the initial status here and always get that value even when the control
   // is invisible, or we exclude it and don't get a value for status when the default is accepted
@@ -20,21 +20,18 @@ const ScanRoute = () => {
   const [selScan, setSelScan] = useState(null);
   const [scans, setScans] = useState([]);
   const [scanData, setScanData] = useState({});
-  const getReq = async id => {
-    await sleep(2000);
-    return { id, msg: `this is req ${id} ` };
-  };
   const onSubmit = (values, form) => {
     const scannedAt = Date.now();
-    form.initialize(_.omit(values, 'scan'));
+    form.initialize(_.omit(values, 'reqId'));
+
     // scannedAt functions as the id of the scan rather than reqId, enabling
     // one to scan an item multiple times and see past statuses
-
     setScanData({ ...scanData, [scannedAt]: null });
     setSelScan(scannedAt);
-    setScans([{ scannedAt, reqId: values.scan, v: values }, ...scans]);
-    getReq(values.scan).then(res => setScanData(prevData => ({ ...prevData, [scannedAt]: res })));
-    // getReq(values.scan).then(res => console.log({ ...scanData, [scannedAt]: res }));
+    setScans([{ scannedAt, ...values }, ...scans]);
+    props.mutator.request
+      .GET({ path: `rs/patronrequests/${values.reqId}` })
+      .then(res => setScanData(prevData => ({ ...prevData, [scannedAt]: res })));
   };
   return (
     <Row>
@@ -67,29 +64,32 @@ const ScanRoute = () => {
                     )}
                   </Col>
                 </Row>
-                <Field name="scan" component={TextField} autoFocus placeholder="Scan or enter barcode..." />
+                <Field name="reqId" component={TextField} autoFocus placeholder="Scan or enter barcode..." />
               </form>
             )}
           />
           <List
             items={scans}
-            itemFormatter={req => (
-              <button
-                type="button"
-                onClick={() => setSelScan(req.scannedAt)}
-                key={req.scannedAt}
-                className={css.scanned}
-              >
-                <Card
-                  cardStyle="positive"
-                  cardClass={classNames({ [css.selected]: req.scannedAt === selScan })}
-                  roundedBorder
-                  headerStart={req.reqId}
+            itemFormatter={req => {
+              const mayGet = prop => _.get(scanData[req.scannedAt], prop, '');
+              return (
+                <button
+                  type="button"
+                  onClick={() => setSelScan(req.scannedAt)}
+                  key={req.scannedAt}
+                  className={css.scanned}
                 >
-                  {JSON.stringify(req.v) + JSON.stringify(scanData[req.scannedAt])}
-                </Card>
-              </button>
-            )}
+                  <Card
+                    cardStyle="positive"
+                    cardClass={classNames({ [css.selected]: req.scannedAt === selScan })}
+                    roundedBorder
+                    headerStart={mayGet('title') || req.reqId}
+                  >
+                    {mayGet('isRequester') ? 'Loan' : 'Return'}
+                  </Card>
+                </button>
+              );
+            }}
           />
         </Layout>
       </Col>
@@ -97,11 +97,27 @@ const ScanRoute = () => {
         <Layout className="padding-all-gutter">
           {selScan === null && 'Scan an item!'}
           {selScan && !scanData[selScan] && 'Loading...'}
-          {selScan && JSON.stringify(scanData[selScan])}
+          {selScan && scanData[selScan] && (
+            <Card roundedBorder headerStart="Item" headerEnd="View">
+              {_.get(scanData, [selScan, 'title'])}
+            </Card>
+          )}
         </Layout>
       </Col>
     </Row>
   );
 };
 
-export default ScanRoute;
+ScanRoute.manifest = {
+  request: {
+    type: 'okapi',
+    fetch: false,
+    accumulate: true,
+  },
+};
+
+ScanRoute.propTypes = {
+  mutator: PropTypes.object.isRequired,
+};
+
+export default stripesConnect(ScanRoute);
