@@ -34,9 +34,9 @@ const ScanRoute = props => {
       .then(res => setScanData(prevData => ({ ...prevData, [scannedAt]: res })));
   };
   return (
-    <Row>
-      <Col xs={8}>
-        <Layout className="padding-all-gutter">
+    <Layout className="padding-all-gutter">
+      <Row>
+        <Col xs={8}>
           <Form
             onSubmit={onSubmit}
             initialValues={initialValues}
@@ -91,10 +91,8 @@ const ScanRoute = props => {
               );
             }}
           />
-        </Layout>
-      </Col>
-      <Col xs={4}>
-        <Layout className="padding-all-gutter">
+        </Col>
+        <Col xs={4}>
           {selScan === null && 'Scan an item!'}
           {selScan && !scanData[selScan] && 'Loading...'}
           {selScan && scanData[selScan] && (
@@ -102,9 +100,9 @@ const ScanRoute = props => {
               {_.get(scanData, [selScan, 'title'])}
             </Card>
           )}
-        </Layout>
-      </Col>
-    </Row>
+        </Col>
+      </Row>
+    </Layout>
   );
 };
 
