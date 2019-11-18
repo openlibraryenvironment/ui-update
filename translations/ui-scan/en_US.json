@@ -5,5 +5,9 @@
   "op.changeStatus": "Change request status to...",
   "op.slip": "Print request slip",
   "status.received": "Item received",
-  "status.sent": "Item sent"
+  "status.sent": "Item sent",
+  "column.reqId": "Request ID",
+  "column.requester": "Requester",
+  "column.supplier": "Supplier",
+  "column.title": "Item Title"
 }
