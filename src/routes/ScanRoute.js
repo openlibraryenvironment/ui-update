@@ -1,64 +1,112 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
-import { FormattedMessage } from 'react-intl';
+import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
-import classNames from 'classnames';
-import { Layout, Row, Col, Select, TextField, MultiColumnList, Card, Icon } from '@folio/stripes/components';
-import { stripesConnect } from '@folio/stripes/core';
-import css from './ScanRoute.css';
+import { Headline, Layout, Row, Col, Select, TextField, MultiColumnList, Card, Icon } from '@folio/stripes/components';
+import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
 
-const scanFormatter = { success: scan => {
-  if (scan.success === true) {
+const STATUS = Object.freeze({
+  PENDING: 1,
+  SUCCESS: 2,
+  FAIL: 3,
+});
+
+const scanFormatter = { status: scan => {
+  if (scan.status === STATUS.SUCCESS) {
     return <Icon size="large" icon="check-circle" status="success" />;
   }
-  if (scan.success === false) {
+  if (scan.status === STATUS.FAIL) {
     return <Icon size="large" icon="times-circle-solid" status="error" />;
   }
   return <Icon size="large" icon="clock" />;
 } };
 
-const ScanRoute = props => {
+const ScanRoute = ({ intl }) => {
   // Unfortunately, it doesn't seem to be readily possible to initialise at the field level.
   // So either we put the initial status here and always get that value even when the control
   // is invisible, or we exclude it and don't get a value for status when the default is accepted
   // and not explicitly chosen.
   const initialValues = {
-    op: 'changeStatus',
-    status: 'received',
+    action: 'supplierMarkShipped',
   };
   const [selScan, setSelScan] = useState(null);
   const [scans, setScans] = useState([]);
   const [scanData, setScanData] = useState({});
+  const selData = scanData?.[selScan];
+  const selReq = selData?.request;
+  const updateScan = (scannedAt, newData) => {
+    setScanData(prev => ({ ...prev, [scannedAt]: { ...(prev[scannedAt] || {}), ...newData } }));
+  };
+  const okapiKy = useOkapiKy();
 
-  const onSubmit = (values, form) => {
-    const scannedAt = Date.now();
-    form.initialize(_.omit(values, 'reqId'));
-
-    // scannedAt functions as the id of the scan rather than reqId, enabling
-    // one to scan an item multiple times and see past statuses
-    setScanData({ ...scanData, [scannedAt]: null });
-    setSelScan(scannedAt);
-    setScans([{ scannedAt, ...values }, ...scans]);
-    props.mutator.request
-      .GET({ path: `rs/patronrequests/${values.reqId}` })
-      .then(res => setScanData(prevData => ({ ...prevData, [scannedAt]: res })));
+  // mod-rs action names are translated in stripes-reshare, but some are specific to this app
+  const trAction = action => {
+    if (`ui-scan.actions.${action}` in intl.messages) {
+      return intl.formatMessage({ id: `ui-scan.actions.${action}` });
+    }
+    return intl.formatMessage({ id: `stripes-reshare.actions.${action}` });
   };
 
-  const formattedScans = scans.map(scan => {
-    const data = scanData[scan.scannedAt];
-    if (!data) {
-      return { success: null, reqId: scan.reqId, requester: '', supplier: '', title: '' };
-    }
-    const mayGet = prop => _.get(data, prop, '');
-    console.log(scan, data);
+  const scanActions = ['supplierMarkShipped'];
+  const scanHandlers = {
+    supplierCheckInToReshare: async (request, performAction) => {},
+  };
+
+  const onSubmit = (values, form) => {
+    // scannedAt functions as the id of the scan rather than reqId, enabling
+    const scannedAt = Date.now();
+    let request;
+    const updateThis = newData => updateScan(scannedAt, newData);
+    updateThis({ status: STATUS.PENDING, hrid: values.hrid });
+    setScans([scannedAt, ...scans]);
+    setSelScan(scannedAt);
+
+    const performAction = async (action, actionParams = {}) => {
+      if (!request.validActions.includes(action)) {
+        throw new Error(intl.formatMessage({ id: 'ui-scan.error.notValid' }));
+      }
+      okapiKy.post(`rs/patronrequests/${request.id}/performAction`, { json: { action, actionParams } });
+    };
+
+    // reset form so user can proceed to scan the next item while this is loading
+    form.initialize(_.omit(values, 'hrid'));
+
+    okapiKy.get('rs/patronrequests', { searchParams: { match: 'hrid', term: values.hrid } })
+      .json()
+      .then(res => {
+        // One would thing hrid should find exactly one record, but some test requests use the same institution
+        // as both requester and supplier so not making this check length === 1 for now
+        if (res?.length > 0) {
+          request = res[0];
+          updateThis({ request });
+        } else {
+          throw new Error(intl.formatMessage({ id: 'ui-scan.error.noRequest' }));
+        }
+
+        if (values.action in scanHandlers) {
+          return scanHandlers[values.action](performAction);
+        } else {
+          return performAction(values.action);
+        }
+      })
+      .then(() => {
+        updateThis({ status: STATUS.SUCCESS });
+      })
+      .catch(error => {
+        updateThis({ status: STATUS.FAIL, error });
+      });
+  };
+
+  const formattedScans = scans.map(scannedAt => {
+    const scan = scanData[scannedAt];
     return {
-      success: true,
-      reqId: scan.reqId,
-      requester: mayGet('requestingInstitutionSymbol'),
-      supplier: mayGet('supplyingInstitutionSymbol'),
-      title: mayGet('title'),
-      scannedAt: scan.scannedAt,
+      status: scan?.status ?? '',
+      hrid: scan?.hrid ?? '',
+      requester: scan?.request?.requestingInstitutionSymbol ?? '',
+      supplier: scan?.request?.supplyingInstitutionSymbol ?? '',
+      title: scan?.request?.title ?? '',
+      scannedAt,
     };
   });
 
@@ -69,31 +117,20 @@ const ScanRoute = props => {
           <Form
             onSubmit={onSubmit}
             initialValues={initialValues}
-            render={({ handleSubmit, form, values }) => (
+            render={({ handleSubmit, form }) => (
               <form onSubmit={handleSubmit}>
                 <Row>
                   <Col xs={6}>
-                    <Field name="op" component={Select} required>
-                      {['changeStatus', 'slip'].map(trKey => (
-                        <FormattedMessage key={trKey} id={`ui-scan.op.${trKey}`}>
-                          {trMsg => <option value={trKey}>{trMsg}</option>}
-                        </FormattedMessage>
+                    <Field name="action" component={Select} required>
+                      {scanActions.map(action => (
+                        <option key={action} value={action}>{trAction(action)}</option>
                       ))}
                     </Field>
                   </Col>
                   <Col xs={6}>
-                    {values.op === 'changeStatus' && (
-                      <Field name="status" component={Select} required>
-                        {['received', 'sent'].map(trKey => (
-                          <FormattedMessage key={trKey} id={`ui-scan.status.${trKey}`}>
-                            {trMsg => <option value={trKey}>{trMsg}</option>}
-                          </FormattedMessage>
-                        ))}
-                      </Field>
-                    )}
+                    <Field name="hrid" component={TextField} autoFocus placeholder="Scan or enter barcode..." />
                   </Col>
                 </Row>
-                <Field name="reqId" component={TextField} autoFocus placeholder="Scan or enter barcode..." />
               </form>
             )}
           />
@@ -101,12 +138,12 @@ const ScanRoute = props => {
             <MultiColumnList
               contentData={formattedScans}
               formatter={scanFormatter}
-              visibleColumns={['success', 'reqId', 'requester', 'supplier', 'title']}
+              visibleColumns={['status', 'hrid', 'requester', 'supplier', 'title']}
               isSelected={({ item }) => selScan === item.scannedAt}
               onRowClick={(e, row) => setSelScan(row.scannedAt)}
               columnMapping={{
-                success: '',
-                reqId: <FormattedMessage id="ui-scan.column.reqId" />,
+                status: '',
+                hrid: <FormattedMessage id="ui-scan.column.hrid" />,
                 requester: <FormattedMessage id="ui-scan.column.requester" />,
                 supplier: <FormattedMessage id="ui-scan.column.supplier" />,
                 title: <FormattedMessage id="ui-scan.column.title" />
@@ -116,8 +153,8 @@ const ScanRoute = props => {
               // preventing this. Adding up to less than 100% is necessary to avoid
               // scrollbars introduced by some negative margin somewhere.
               columnWidths={{
-                success: '5%',
-                reqId: '30%',
+                status: '5%',
+                hrid: '30%',
                 requester: '10%',
                 supplier: '10%',
                 title: '44%',
@@ -128,10 +165,16 @@ const ScanRoute = props => {
         <Col xs={4}>
           {selScan === null && 'Scan an item!'}
           {selScan && !scanData[selScan] && 'Loading...'}
-          {selScan && scanData[selScan] && (
-            <Card roundedBorder headerStart="Item" headerEnd="View">
-              {_.get(scanData, [selScan, 'title'])}
-            </Card>
+          {selData && (
+            <>
+              <Headline size="x-large" margin="none">{selData.hrid}</Headline>
+              {selReq && (
+                <>
+                  <FormattedMessage id="ui-scan.currentStatus" />
+                  <FormattedMessage id={`stripes-reshare.states.${selReq?.state?.code}`} />
+                </>
+              )}
+            </>
           )}
         </Col>
       </Row>
@@ -139,16 +182,8 @@ const ScanRoute = props => {
   );
 };
 
-ScanRoute.manifest = {
-  request: {
-    type: 'okapi',
-    fetch: false,
-    accumulate: true,
-  },
-};
-
 ScanRoute.propTypes = {
-  mutator: PropTypes.object.isRequired,
+  intl: PropTypes.object.isRequired,
 };
 
-export default stripesConnect(ScanRoute);
+export default injectIntl(ScanRoute);
