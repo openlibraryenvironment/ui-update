@@ -1,5 +1,5 @@
 {
-  "name": "@folio/scan",
+  "name": "@folio/update",
   "version": "1.0.0",
   "description": "Quickly change the status of items. Part of the ReShare project.",
   "main": "src/index.js",
@@ -50,13 +50,13 @@
     "actsAs": [
       "app"
     ],
-    "displayName": "ui-scan.meta.title",
-    "route": "/scan",
+    "displayName": "ui-update.meta.title",
+    "route": "/update",
     "okapiInterfaces": {},
     "permissionSets": [
       {
-        "permissionName": "module.scan.enabled",
-        "displayName": "UI: scan module is enabled",
+        "permissionName": "module.update.enabled",
+        "displayName": "UI: update module is enabled",
         "visible": true
       }
     ]

@@ -42,8 +42,8 @@ const ScanRoute = ({ intl }) => {
 
   // mod-rs action names are translated in stripes-reshare, but some are specific to this app
   const trAction = action => {
-    if (`ui-scan.actions.${action}` in intl.messages) {
-      return intl.formatMessage({ id: `ui-scan.actions.${action}` });
+    if (`ui-update.actions.${action}` in intl.messages) {
+      return intl.formatMessage({ id: `ui-update.actions.${action}` });
     }
     return intl.formatMessage({ id: `stripes-reshare.actions.${action}` });
   };
@@ -64,7 +64,7 @@ const ScanRoute = ({ intl }) => {
 
     const performAction = async (action, actionParams = {}) => {
       if (!request.validActions.includes(action)) {
-        throw new Error(intl.formatMessage({ id: 'ui-scan.error.notValid' }));
+        throw new Error(intl.formatMessage({ id: 'ui-update.error.notValid' }));
       }
       okapiKy.post(`rs/patronrequests/${request.id}/performAction`, { json: { action, actionParams } });
     };
@@ -81,7 +81,7 @@ const ScanRoute = ({ intl }) => {
           request = res[0];
           updateThis({ request });
         } else {
-          throw new Error(intl.formatMessage({ id: 'ui-scan.error.noRequest' }));
+          throw new Error(intl.formatMessage({ id: 'ui-update.error.noRequest' }));
         }
 
         if (values.action in scanHandlers) {
@@ -143,10 +143,10 @@ const ScanRoute = ({ intl }) => {
               onRowClick={(e, row) => setSelScan(row.scannedAt)}
               columnMapping={{
                 status: '',
-                hrid: <FormattedMessage id="ui-scan.column.hrid" />,
-                requester: <FormattedMessage id="ui-scan.column.requester" />,
-                supplier: <FormattedMessage id="ui-scan.column.supplier" />,
-                title: <FormattedMessage id="ui-scan.column.title" />
+                hrid: <FormattedMessage id="ui-update.column.hrid" />,
+                requester: <FormattedMessage id="ui-update.column.requester" />,
+                supplier: <FormattedMessage id="ui-update.column.supplier" />,
+                title: <FormattedMessage id="ui-update.column.title" />
               }}
               // It would be better to express the fixed-width columns in em and let
               // the remaining space go to Title, alas there seems to be an MCL bug
@@ -170,7 +170,7 @@ const ScanRoute = ({ intl }) => {
               <Headline size="x-large" margin="none">{selData.hrid}</Headline>
               {selReq && (
                 <>
-                  <FormattedMessage id="ui-scan.currentStatus" />
+                  <FormattedMessage id="ui-update.currentStatus" />
                   <FormattedMessage id={`stripes-reshare.states.${selReq?.state?.code}`} />
                 </>
               )}
