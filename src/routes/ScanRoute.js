@@ -3,7 +3,7 @@ import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
-import { Headline, KeyValue, Layout, Row, Col, Select, TextField, MultiColumnList, Card, Icon } from '@folio/stripes/components';
+import { Card, Icon, Headline, KeyValue, MessageBanner, Layout, Row, Col, Select, TextField, MultiColumnList } from '@folio/stripes/components';
 import CatalogInfo from '@folio/stripes-reshare/cards/CatalogInfo';
 import RequesterSupplier from '@folio/stripes-reshare/cards/RequesterSupplier';
 import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
@@ -32,6 +32,7 @@ const ScanRoute = ({ intl }) => {
   const initialValues = {
     action: 'supplierMarkShipped',
   };
+  const [currentAction, setCurrentAction] = useState(initialValues.action);
   const [selScan, setSelScan] = useState(null);
   const [scans, setScans] = useState([]);
   const [scanData, setScanData] = useState({});
@@ -43,17 +44,21 @@ const ScanRoute = ({ intl }) => {
   const okapiKy = useOkapiKy();
 
   // mod-rs action names are translated in stripes-reshare, but some are specific to this app
-  const trAction = action => {
+  // TODO: this can easily be factored out into a hook once stripes-core upgrades react-intl
+  // so useIntl is available
+  const trAction = (action, suffix = '') => {
     if (`ui-update.actions.${action}` in intl.messages) {
-      return intl.formatMessage({ id: `ui-update.actions.${action}` });
+      return intl.formatMessage({ id: `ui-update.actions.${action}${suffix}` });
     }
-    return intl.formatMessage({ id: `stripes-reshare.actions.${action}` });
+    return intl.formatMessage({ id: `stripes-reshare.actions.${action}${suffix}` });
   };
 
   const scanActions = ['supplierMarkShipped'];
   const scanHandlers = {
     supplierCheckInToReshare: async (request, performAction) => {},
   };
+
+  const actionChange = e => setCurrentAction(e.target.value);
 
   const onSubmit = (values, form) => {
     // scannedAt functions as the id of the scan rather than reqId, enabling
@@ -66,7 +71,7 @@ const ScanRoute = ({ intl }) => {
 
     const performAction = async (action, actionParams = {}) => {
       if (!request.validActions.includes(action)) {
-        throw new Error(intl.formatMessage({ id: 'ui-update.error.notValid' }));
+        throw new Error(intl.formatMessage({ id: 'ui-update.error.notValidForState' }));
       }
       okapiKy.post(`rs/patronrequests/${request.id}/performAction`, { json: { action, actionParams } });
     };
@@ -123,7 +128,7 @@ const ScanRoute = ({ intl }) => {
               <form onSubmit={handleSubmit}>
                 <Row>
                   <Col xs={6}>
-                    <Field name="action" component={Select} required>
+                    <Field name="action" component={Select} input={{ onChange: actionChange }} required>
                       {scanActions.map(action => (
                         <option key={action} value={action}>{trAction(action)}</option>
                       ))}
@@ -166,10 +171,21 @@ const ScanRoute = ({ intl }) => {
         </Col>
         <Col xs={4}>
           {selScan === null && 'Scan an item!'}
-          {selScan && !scanData[selScan] && 'Loading...'}
           {selData && (
             <>
               <Headline size="x-large" margin="none">{selData.hrid}</Headline>
+              {selData.status === STATUS.SUCCESS && (
+                <MessageBanner type="error">
+                  <FormattedMessage id={trAction(currentAction, '.success')} />
+                </MessageBanner>
+              )}
+              {selData.status === STATUS.FAIL && (
+                <MessageBanner type="error">
+                  <KeyValue label={<FormattedMessage id={trAction(currentAction, '.error')} />}>
+                    {selData.error.toString() || ''}
+                  </KeyValue>
+                </MessageBanner>
+              )}
               {selReq && (
                 <>
                   <KeyValue label={<FormattedMessage id="stripes-reshare.requestStatus" />}>

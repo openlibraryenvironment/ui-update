@@ -9,5 +9,7 @@
   "column.hrid": "Request ID",
   "column.requester": "Requester",
   "column.supplier": "Supplier",
-  "column.title": "Item Title"
+  "column.title": "Item Title",
+  "error.noRequest": "No request found matching scanned id",
+  "error.notValidForState": "Action not valid for current state"
 }
