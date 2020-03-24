@@ -3,7 +3,9 @@ import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
-import { Headline, Layout, Row, Col, Select, TextField, MultiColumnList, Card, Icon } from '@folio/stripes/components';
+import { Headline, KeyValue, Layout, Row, Col, Select, TextField, MultiColumnList, Card, Icon } from '@folio/stripes/components';
+import CatalogInfo from '@folio/stripes-reshare/cards/CatalogInfo';
+import RequesterSupplier from '@folio/stripes-reshare/cards/RequesterSupplier';
 import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
 
 const STATUS = Object.freeze({
@@ -170,8 +172,11 @@ const ScanRoute = ({ intl }) => {
               <Headline size="x-large" margin="none">{selData.hrid}</Headline>
               {selReq && (
                 <>
-                  <FormattedMessage id="ui-update.currentStatus" />
-                  <FormattedMessage id={`stripes-reshare.states.${selReq?.state?.code}`} />
+                  <KeyValue label={<FormattedMessage id="stripes-reshare.requestStatus" />}>
+                    <Headline size="large" faded><FormattedMessage id={`stripes-reshare.states.${selReq?.state?.code}`} /></Headline>
+                  </KeyValue>
+                  <CatalogInfo request={selReq} />
+                  <RequesterSupplier request={selReq} />
                 </>
               )}
             </>
