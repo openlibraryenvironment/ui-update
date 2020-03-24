@@ -175,7 +175,7 @@ const ScanRoute = ({ intl }) => {
             <>
               <Headline size="x-large" margin="none">{selData.hrid}</Headline>
               {selData.status === STATUS.SUCCESS && (
-                <MessageBanner type="error">
+                <MessageBanner type="success">
                   <FormattedMessage id={trAction(currentAction, '.success')} />
                 </MessageBanner>
               )}
