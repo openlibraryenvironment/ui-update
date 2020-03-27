@@ -98,8 +98,9 @@ const ScanRoute = ({ intl }) => {
         }
       })
       .then(() => {
-        updateThis({ status: STATUS.SUCCESS });
+        return okapiKy.get(`rs/patronrequests/${request.id}`).json();
       })
+      .then(res => updateThis({ request: res, status: STATUS.SUCCESS }))
       .catch(error => {
         updateThis({ status: STATUS.FAIL, error });
       });
