@@ -82,7 +82,7 @@ const ScanRoute = ({ intl }) => {
     okapiKy.get('rs/patronrequests', { searchParams: { match: 'hrid', term: values.hrid } })
       .json()
       .then(res => {
-        // One would thing hrid should find exactly one record, but some test requests use the same institution
+        // One would think hrid should find exactly one record, but some test requests use the same institution
         // as both requester and supplier so not making this check length === 1 for now
         if (res?.length > 0) {
           request = res[0];
