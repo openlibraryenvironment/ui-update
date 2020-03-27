@@ -39,7 +39,7 @@ const ScanRoute = ({ intl }) => {
   const selData = scanData?.[selScan];
   const selReq = selData?.request;
   const updateScan = (scannedAt, newData) => {
-    setScanData(prev => ({ ...prev, [scannedAt]: { ...(prev[scannedAt] || {}), ...newData } }));
+    setScanData(prev => ({ ...prev, [scannedAt]: { ...prev[scannedAt], ...newData } }));
   };
   const okapiKy = useOkapiKy();
 
