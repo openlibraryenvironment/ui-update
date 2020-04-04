@@ -52,6 +52,13 @@
     ],
     "displayName": "ui-update.meta.title",
     "route": "/update",
+    "icons": [
+      {
+        "name": "app",
+        "alt": "Update patron requests",
+        "title": "Update"
+      }
+    ],
     "okapiInterfaces": {},
     "permissionSets": [
       {
