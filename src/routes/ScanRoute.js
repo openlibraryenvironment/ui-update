@@ -1,12 +1,14 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
-import { Card, Icon, Headline, KeyValue, MessageBanner, Layout, Row, Col, Select, TextField, MultiColumnList } from '@folio/stripes/components';
+import { Icon, Headline, KeyValue, MessageBanner, Modal, Layout, Row, Col, Select, TextField, MultiColumnList } from '@folio/stripes/components';
 import CatalogInfo from '@folio/stripes-reshare/cards/CatalogInfo';
 import RequesterSupplier from '@folio/stripes-reshare/cards/RequesterSupplier';
 import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
+
+const scanActions = ['supplierCheckInToReshare', 'supplierMarkShipped'];
 
 const STATUS = Object.freeze({
   PENDING: 1,
@@ -24,18 +26,19 @@ const scanFormatter = { status: scan => {
   return <Icon size="large" icon="clock" />;
 } };
 
+// Need this outside the component as it gets re-rendered while the modal
+// is still up. When tidying this and breaking into separate files I'll
+// try and have the modal-promise-maker inject the whole thing into the DOM
+// from within the promise so it can be self-contained
+const itemModalHandlers = {};
+
 const ScanRoute = ({ intl }) => {
-  // Unfortunately, it doesn't seem to be readily possible to initialise at the field level.
-  // So either we put the initial status here and always get that value even when the control
-  // is invisible, or we exclude it and don't get a value for status when the default is accepted
-  // and not explicitly chosen.
-  const initialValues = {
-    action: 'supplierMarkShipped',
-  };
-  const [currentAction, setCurrentAction] = useState(initialValues.action);
+  const [currentAction, setCurrentAction] = useState(scanActions[0]);
   const [selScan, setSelScan] = useState(null);
   const [scans, setScans] = useState([]);
   const [scanData, setScanData] = useState({});
+  const [showItemModal, setShowItemModal] = useState(false);
+  const itemModalInput = useRef();
   const selData = scanData?.[selScan];
   const selReq = selData?.request;
   const updateScan = (scannedAt, newData) => {
@@ -53,54 +56,81 @@ const ScanRoute = ({ intl }) => {
     return intl.formatMessage({ id: `stripes-reshare.actions.${action}${suffix}` });
   };
 
-  const scanActions = ['supplierMarkShipped'];
-  const scanHandlers = {
-    supplierCheckInToReshare: async (request, performAction) => {},
+  const getItemBarcode = () => {
+    const itemBarcodePromise = new Promise((resolve, reject) => {
+      itemModalHandlers.cancel = () => {
+        setShowItemModal(false);
+        reject(new Error(intl.formatMessage({ id: 'ui-update.error.dismissed' })));
+      };
+      itemModalHandlers.submit = (values) => {
+        setShowItemModal(false);
+        resolve(values.itemBarcode);
+      };
+    });
+    setShowItemModal(true);
+    return itemBarcodePromise;
   };
 
-  const actionChange = e => setCurrentAction(e.target.value);
+  const actionChange = e => {
+    setScans([]);
+    setScanData({});
+    setCurrentAction(e.target.value);
+  };
 
   const onSubmit = (values, form) => {
     // scannedAt functions as the id of the scan rather than reqId, enabling
     const scannedAt = Date.now();
-    let request;
     const updateThis = newData => updateScan(scannedAt, newData);
     updateThis({ status: STATUS.PENDING, hrid: values.hrid });
     setScans([scannedAt, ...scans]);
     setSelScan(scannedAt);
 
-    const performAction = async (action, actionParams = {}) => {
+    // These take performAction even though it's defined in this scope in hopes of this one day being its own file
+    const scanHandlers = {
+      supplierCheckInToReshare: async (requestPromise, performAction) => {
+        const itemBarcode = await getItemBarcode();
+        const request = await requestPromise;
+        return performAction(request, 'supplierCheckInToReshare', { itemBarcode });
+      },
+    };
+
+    const performAction = async (request, action, actionParams = {}) => {
       if (!request.validActions.includes(action)) {
         throw new Error(intl.formatMessage({ id: 'ui-update.error.notValidForState' }));
       }
-      okapiKy.post(`rs/patronrequests/${request.id}/performAction`, { json: { action, actionParams } });
+      return okapiKy.post(`rs/patronrequests/${request.id}/performAction`, { json: { action, actionParams } });
     };
 
-    // reset form so user can proceed to scan the next item while this is loading
+    // Reset form so user can proceed to scan the next item while this is loading
     form.initialize(_.omit(values, 'hrid'));
 
-    okapiKy.get('rs/patronrequests', { searchParams: { match: 'hrid', term: values.hrid } })
-      .json()
-      .then(res => {
-        // One would think hrid should find exactly one record, but some test requests use the same institution
-        // as both requester and supplier so not making this check length === 1 for now
-        if (res?.length > 0) {
-          request = res[0];
-          updateThis({ request });
-        } else {
-          throw new Error(intl.formatMessage({ id: 'ui-update.error.noRequest' }));
-        }
+    // Give scanHandlers a promise rather than a resolved request so they can
+    // choose to include logic that happens without waiting for the request or
+    // merely await it.
+    const requestPromise = (async () => {
+      const results = await okapiKy.get('rs/patronrequests', { searchParams: { match: 'hrid', term: values.hrid } }).json();
+      // One would think hrid should find exactly one record, but some test requests use the same institution
+      // as both requester and supplier so not making this check length === 1 for now
+      if (results?.length > 0) {
+        const request = results[0];
+        updateThis({ request });
+        return request;
+      } else {
+        throw new Error(intl.formatMessage({ id: 'ui-update.error.noRequest' }));
+      }
+    })();
 
-        if (values.action in scanHandlers) {
-          return scanHandlers[values.action](performAction);
-        } else {
-          return performAction(values.action);
-        }
-      })
-      .then(() => {
-        return okapiKy.get(`rs/patronrequests/${request.id}`).json();
-      })
-      .then(res => updateThis({ request: res, status: STATUS.SUCCESS }))
+    (async () => {
+      if (currentAction in scanHandlers) {
+        await scanHandlers[currentAction](requestPromise, performAction);
+      }
+      const request = await requestPromise;
+      if (!(currentAction in scanHandlers)) {
+        await performAction(request, currentAction);
+      }
+      const updated = await okapiKy.get(`rs/patronrequests/${request.id}`).json();
+      updateThis({ request: updated, status: STATUS.SUCCESS });
+    })()
       .catch(error => {
         updateThis({ status: STATUS.FAIL, error });
       });
@@ -122,26 +152,25 @@ const ScanRoute = ({ intl }) => {
     <Layout className="padding-all-gutter">
       <Row>
         <Col xs={8}>
-          <Form
-            onSubmit={onSubmit}
-            initialValues={initialValues}
-            render={({ handleSubmit, form }) => (
-              <form onSubmit={handleSubmit}>
-                <Row>
-                  <Col xs={6}>
-                    <Field name="action" component={Select} input={{ onChange: actionChange }} required>
-                      {scanActions.map(action => (
-                        <option key={action} value={action}>{trAction(action)}</option>
-                      ))}
-                    </Field>
-                  </Col>
-                  <Col xs={6}>
+          <Row>
+            <Col xs={6}>
+              <Select onChange={actionChange}>
+                {scanActions.map(action => (
+                  <option key={action} value={action}>{trAction(action)}</option>
+                ))}
+              </Select>
+            </Col>
+            <Col xs={6}>
+              <Form
+                onSubmit={onSubmit}
+                render={({ handleSubmit, form }) => (
+                  <form onSubmit={handleSubmit}>
                     <Field name="hrid" component={TextField} autoFocus placeholder="Scan or enter barcode..." />
-                  </Col>
-                </Row>
-              </form>
-            )}
-          />
+                  </form>
+                )}
+              />
+            </Col>
+          </Row>
           {formattedScans.length > 0 &&
             <MultiColumnList
               contentData={formattedScans}
@@ -183,7 +212,7 @@ const ScanRoute = ({ intl }) => {
               {selData.status === STATUS.FAIL && (
                 <MessageBanner type="error">
                   <KeyValue label={<FormattedMessage id={trAction(currentAction, '.error')} />}>
-                    {selData.error.toString() || ''}
+                    {selData.error?.message || ''}
                   </KeyValue>
                 </MessageBanner>
               )}
@@ -200,6 +229,23 @@ const ScanRoute = ({ intl }) => {
           )}
         </Col>
       </Row>
+      <Modal
+        open={showItemModal}
+        onOpen={() => itemModalInput.current.focus()}
+        onClose={() => itemModalHandlers.cancel()}
+        label={<FormattedMessage id="ui-update.checkInPrompt" />}
+        dismissible
+        restoreFocus
+      >
+        <Form
+          onSubmit={itemModalHandlers.submit}
+          render={({ handleSubmit }) => (
+            <form onSubmit={handleSubmit} autoComplete="off">
+              <Field name="itemBarcode" inputRef={itemModalInput} component={TextField} />
+            </form>
+          )}
+        />
+      </Modal>
     </Layout>
   );
 };
