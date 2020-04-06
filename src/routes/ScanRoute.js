@@ -8,7 +8,13 @@ import CatalogInfo from '@folio/stripes-reshare/cards/CatalogInfo';
 import RequesterSupplier from '@folio/stripes-reshare/cards/RequesterSupplier';
 import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
 
-const scanActions = ['supplierCheckInToReshare', 'supplierMarkShipped'];
+const scanActions = [
+  'supplierCheckInToReshare',
+  'supplierMarkShipped',
+  'supplierCheckOutOfReshare',
+  'requesterReceived',
+  'shippedReturn',
+];
 
 const STATUS = Object.freeze({
   PENDING: 1,
