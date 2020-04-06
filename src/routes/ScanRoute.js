@@ -109,15 +109,15 @@ const ScanRoute = ({ intl }) => {
     // merely await it.
     const requestPromise = (async () => {
       const results = await okapiKy.get('rs/patronrequests', { searchParams: { match: 'hrid', term: values.hrid } }).json();
-      // One would think hrid should find exactly one record, but some test requests use the same institution
-      // as both requester and supplier so not making this check length === 1 for now
-      if (results?.length > 0) {
+      if (results?.length === 1) {
         const request = results[0];
         updateThis({ request });
         return request;
-      } else {
-        throw new Error(intl.formatMessage({ id: 'ui-update.error.noRequest' }));
+      } else if (results?.length > 1) {
+        // Should never happen in real world use, may happen in dev environments where requester and supplier are the same tenant
+        throw new Error(intl.formatMessage({ id: 'ui-update.error.multipleRequestsForHRID' }));
       }
+      throw new Error(intl.formatMessage({ id: 'ui-update.error.noRequest' }));
     })();
 
     (async () => {
