@@ -3,27 +3,14 @@ import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
-import { Icon, Headline, KeyValue, MessageBanner, Modal, Layout, Row, Col, Select, TextField, MultiColumnList } from '@folio/stripes/components';
-import CatalogInfo from '@folio/stripes-reshare/cards/CatalogInfo';
-import RequesterSupplier from '@folio/stripes-reshare/cards/RequesterSupplier';
+import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField } from '@folio/stripes/components';
 import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
+
+import ScanList from '../components/ScanList';
 import scanActions from '../scanActions';
+import STATUS from '../scanStatus';
+import SelectedRequest from '../components/SelectedRequest';
 
-const STATUS = Object.freeze({
-  PENDING: 1,
-  SUCCESS: 2,
-  FAIL: 3,
-});
-
-const scanFormatter = { status: scan => {
-  if (scan.status === STATUS.SUCCESS) {
-    return <Icon size="large" icon="check-circle" status="success" />;
-  }
-  if (scan.status === STATUS.FAIL) {
-    return <Icon size="large" icon="times-circle-solid" status="error" />;
-  }
-  return <Icon size="large" icon="clock" />;
-} };
 
 // Need this outside the component as it gets re-rendered while the modal
 // is still up. When tidying this and breaking into separate files I'll
@@ -135,99 +122,87 @@ const ScanRoute = ({ intl }) => {
       });
   };
 
-  const formattedScans = scans.map(scannedAt => {
-    const scan = scanData[scannedAt];
-    return {
-      status: scan?.status ?? '',
-      hrid: scan?.hrid ?? '',
-      requester: scan?.request?.requestingInstitutionSymbol ?? '',
-      supplier: scan?.request?.supplyingInstitutionSymbol ?? '',
-      title: scan?.request?.title ?? '',
-      scannedAt,
-    };
-  });
-
   return (
-    <Layout className="padding-all-gutter">
-      <Row>
-        <Col xs={8}>
-          <Row>
-            <Col xs={6}>
-              <Select onChange={actionChange}>
-                {scanActions.map(action => (
-                  <option key={action} value={action}>{trAction(action)}</option>
-                ))}
-              </Select>
-            </Col>
-            <Col xs={6}>
-              <Form
-                onSubmit={onSubmit}
-                render={({ handleSubmit, form }) => (
-                  <form onSubmit={handleSubmit}>
-                    <Field name="hrid" component={TextField} autoFocus placeholder="Scan or enter barcode..." />
-                  </form>
-                )}
-              />
-            </Col>
-          </Row>
-          {formattedScans.length > 0 &&
-            <MultiColumnList
-              contentData={formattedScans}
-              formatter={scanFormatter}
-              visibleColumns={['status', 'hrid', 'requester', 'supplier', 'title']}
-              isSelected={({ item }) => selScan === item.scannedAt}
-              onRowClick={(e, row) => setSelScan(row.scannedAt)}
-              columnMapping={{
-                status: '',
-                hrid: <FormattedMessage id="ui-update.column.hrid" />,
-                requester: <FormattedMessage id="ui-update.column.requester" />,
-                supplier: <FormattedMessage id="ui-update.column.supplier" />,
-                title: <FormattedMessage id="ui-update.column.title" />
-              }}
-              // It would be better to express the fixed-width columns in em and let
-              // the remaining space go to Title, alas there seems to be an MCL bug
-              // preventing this. Adding up to less than 100% is necessary to avoid
-              // scrollbars introduced by some negative margin somewhere.
-              columnWidths={{
-                status: '5%',
-                hrid: '30%',
-                requester: '10%',
-                supplier: '10%',
-                title: '44%',
-              }}
+    <Paneset>
+      <Pane
+        defaultWidth="fill"
+        renderHeader={renderProps => (
+          <PaneHeader
+            renderProps={renderProps}
+            header={(
+              <Row style={{ width: '100%' }}>
+                <Col xs={6}>
+                  <Select onChange={actionChange} marginBottom0>
+                    {scanActions.map(action => (
+                      <option key={action} value={action}>{trAction(action)}</option>
+                    ))}
+                  </Select>
+                </Col>
+                <Col xs={6}>
+                  <Form
+                    onSubmit={onSubmit}
+                    render={({ handleSubmit, form }) => (
+                      <form onSubmit={handleSubmit}>
+                        <Field name="hrid" component={TextField} marginBottom0 autoFocus placeholder="Scan or enter barcode..." />
+                      </form>
+                    )}
+                  />
+                </Col>
+              </Row>
+            )}
+          />
+        )}
+      >
+        {scans.length > 0 &&
+          <ScanList
+            scans={scans}
+            scanData={scanData}
+            selectedScan={selScan}
+            onRowClick={(e, row) => setSelScan(row.scannedAt)}
+          />
+        }
+      </Pane>
+      {!selData && (
+        <Pane
+          defaultWidth="40%"
+        >
+          Scan an item!
+        </Pane>
+      )}
+      {selData && (
+        <Pane
+          defaultWidth="40%"
+          renderHeader={renderProps => (
+            <PaneHeader
+              {...renderProps}
+              paneTitle={selData.hrid}
             />
-          }
-        </Col>
-        <Col xs={4}>
-          {selScan === null && 'Scan an item!'}
-          {selData && (
-            <>
-              <Headline size="x-large" margin="none">{selData.hrid}</Headline>
-              {selData.status === STATUS.SUCCESS && (
-                <MessageBanner type="success">
-                  <FormattedMessage id={trAction(currentAction, '.success')} />
-                </MessageBanner>
-              )}
-              {selData.status === STATUS.FAIL && (
-                <MessageBanner type="error">
-                  <KeyValue label={<FormattedMessage id={trAction(currentAction, '.error')} />}>
-                    {selData.error?.message || ''}
-                  </KeyValue>
-                </MessageBanner>
-              )}
-              {selReq && (
-                <>
-                  <KeyValue label={<FormattedMessage id="stripes-reshare.requestStatus" />}>
-                    <Headline size="large" faded><FormattedMessage id={`stripes-reshare.states.${selReq?.state?.code}`} /></Headline>
-                  </KeyValue>
-                  <CatalogInfo request={selReq} />
-                  <RequesterSupplier request={selReq} />
-                </>
-              )}
-            </>
           )}
-        </Col>
-      </Row>
+          lastMenu={selReq?.id &&
+            <PaneMenu>
+              <PaneHeaderIconButton
+                key="icon-request"
+                icon="document"
+                to={`${selReq.isRequester ? 'request' : 'supply'}/requests/view/${selReq.id}`}
+              />
+            </PaneMenu>
+          }
+        >
+          {selData.status === STATUS.SUCCESS && (
+            <MessageBanner type="success">
+              <FormattedMessage id={trAction(currentAction, '.success')} />
+            </MessageBanner>
+          )}
+          {selData.status === STATUS.FAIL && (
+            <MessageBanner type="error">
+              <KeyValue label={<FormattedMessage id={trAction(currentAction, '.error')} />}>
+                {selData.error?.message || ''}
+              </KeyValue>
+            </MessageBanner>
+          )}
+          {selReq && <SelectedRequest request={selReq} />}
+        </Pane>
+      )}
       <Modal
         open={showItemModal}
         onOpen={() => itemModalInput.current.focus()}
@@ -245,7 +220,7 @@ const ScanRoute = ({ intl }) => {
           )}
         />
       </Modal>
-    </Layout>
+    </Paneset>
   );
 };
 
