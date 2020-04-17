@@ -59,7 +59,7 @@ const ScanList = ({ scans, scanData, selectedScan, onRowClick }) => {
 ScanList.propTypes = {
   scans: PropTypes.arrayOf(PropTypes.number),
   scanData: PropTypes.object.isRequired,
-  selectedScan: PropTypes.object.isRequired,
+  selectedScan: PropTypes.number.isRequired,
   onRowClick: PropTypes.func.isRequired,
 };
 
