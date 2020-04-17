@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
+import { stripesConnect } from '@folio/stripes/core';
 import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField } from '@folio/stripes/components';
 import useOkapiKy from '@folio/stripes-reshare/util/useOkapiKy';
 
@@ -18,17 +19,16 @@ import SelectedRequest from '../components/SelectedRequest';
 // from within the promise so it can be self-contained
 const itemModalHandlers = {};
 
-const ScanRoute = ({ intl }) => {
-  const [currentAction, setCurrentAction] = useState(scanActions[0]);
-  const [selScan, setSelScan] = useState(null);
-  const [scans, setScans] = useState([]);
-  const [scanData, setScanData] = useState({});
+const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, scanData } }) => {
   const [showItemModal, setShowItemModal] = useState(false);
   const itemModalInput = useRef();
   const selData = scanData?.[selScan];
   const selReq = selData?.request;
+  const updatedScanData = { ...scanData };
   const updateScan = (scannedAt, newData) => {
-    setScanData(prev => ({ ...prev, [scannedAt]: { ...prev[scannedAt], ...newData } }));
+    // multiple updates might happen before re-rendering so we can't just use scanData
+    updatedScanData[scannedAt] = { ...updatedScanData[scannedAt], ...newData };
+    mutator.scanData.update({ [scannedAt]: updatedScanData[scannedAt] });
   };
   const okapiKy = useOkapiKy();
 
@@ -58,9 +58,9 @@ const ScanRoute = ({ intl }) => {
   };
 
   const actionChange = e => {
-    setScans([]);
-    setScanData({});
-    setCurrentAction(e.target.value);
+    mutator.scans.replace([]);
+    mutator.scanData.replace({});
+    mutator.currentAction.replace(e.target.value);
   };
 
   const onSubmit = (values, form) => {
@@ -68,8 +68,8 @@ const ScanRoute = ({ intl }) => {
     const scannedAt = Date.now();
     const updateThis = newData => updateScan(scannedAt, newData);
     updateThis({ status: STATUS.PENDING, hrid: values.hrid });
-    setScans([scannedAt, ...scans]);
-    setSelScan(scannedAt);
+    mutator.scans.replace([scannedAt, ...scans]);
+    mutator.selScan.replace(scannedAt);
 
     // These take performAction even though it's defined in this scope in hopes of this one day being its own file
     const scanHandlers = {
@@ -132,7 +132,7 @@ const ScanRoute = ({ intl }) => {
             header={(
               <Row style={{ width: '100%' }}>
                 <Col xs={6}>
-                  <Select onChange={actionChange} marginBottom0>
+                  <Select onChange={actionChange} value={currentAction || undefined} marginBottom0>
                     {scanActions.map(action => (
                       <option key={action} value={action}>{trAction(action)}</option>
                     ))}
@@ -153,12 +153,12 @@ const ScanRoute = ({ intl }) => {
           />
         )}
       >
-        {scans.length > 0 &&
+        {scans?.length > 0 &&
           <ScanList
             scans={scans}
             scanData={scanData}
             selectedScan={selScan}
-            onRowClick={(e, row) => setSelScan(row.scannedAt)}
+            onRowClick={(e, row) => mutator.selScan.replace(row.scannedAt)}
           />
         }
       </Pane>
@@ -224,8 +224,17 @@ const ScanRoute = ({ intl }) => {
   );
 };
 
-ScanRoute.propTypes = {
-  intl: PropTypes.object.isRequired,
+ScanRoute.manifest = {
+  currentAction: { initialValue: scanActions[0] },
+  selScan: {},
+  scans: { initialValue: [] },
+  scanData: { initialValue: {} },
 };
 
-export default injectIntl(ScanRoute);
+ScanRoute.propTypes = {
+  intl: PropTypes.object.isRequired,
+  mutator: PropTypes.object.isRequired,
+  resources: PropTypes.object.isRequired,
+};
+
+export default stripesConnect(injectIntl(ScanRoute));
