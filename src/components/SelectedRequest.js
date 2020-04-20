@@ -7,7 +7,7 @@ import RequesterSupplier from '@folio/stripes-reshare/cards/RequesterSupplier';
 
 const SelectedRequest = ({ request }) => (
   <>
-    <KeyValue label={<FormattedMessage id="stripes-reshare.requestStatus" />}>
+    <KeyValue label={<FormattedMessage id="stripes-reshare.requestState" />}>
       <Headline size="large" faded><FormattedMessage id={`stripes-reshare.states.${request.state?.code}`} /></Headline>
     </KeyValue>
     <CatalogInfo request={request} />
