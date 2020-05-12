@@ -22,6 +22,7 @@ const itemModalHandlers = {};
 const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, scanData } }) => {
   const [showItemModal, setShowItemModal] = useState(false);
   const itemModalInput = useRef();
+  const scanInput = useRef();
   const selData = scanData?.[selScan];
   const selReq = selData?.request;
   const updatedScanData = { ...scanData };
@@ -61,6 +62,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
     mutator.scans.replace([]);
     mutator.scanData.replace({});
     mutator.currentAction.replace(e.target.value);
+    scanInput.current.focus();
   };
 
   const onSubmit = (values, form) => {
@@ -143,7 +145,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
                     onSubmit={onSubmit}
                     render={({ handleSubmit, form }) => (
                       <form onSubmit={handleSubmit}>
-                        <Field name="hrid" component={TextField} marginBottom0 autoFocus placeholder="Scan or enter barcode..." />
+                        <Field name="hrid" component={TextField} marginBottom0 inputRef={scanInput} autoFocus placeholder="Scan or enter barcode..." />
                       </form>
                     )}
                   />
