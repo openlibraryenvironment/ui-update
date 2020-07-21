@@ -11,6 +11,8 @@ import ScanList from '../components/ScanList';
 import scanActions from '../scanActions';
 import STATUS from '../scanStatus';
 import SelectedRequest from '../components/SelectedRequest';
+import css from './ScanRoute.css';
+import emptyPlaceholder from '../update-empty.svg';
 
 
 // Need this outside the component as it gets re-rendered while the modal
@@ -167,8 +169,13 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
       {!selData && (
         <Pane
           defaultWidth="40%"
+          renderHeader={null}
+          padContent={false}
         >
-          Scan an item!
+          <div className={css.emptyPlaceholder}>
+            <img src={emptyPlaceholder} alt="" />
+            <FormattedMessage id="ui-update.placeholder" />
+          </div>
         </Pane>
       )}
       {selData && (

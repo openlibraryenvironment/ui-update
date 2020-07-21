@@ -2,6 +2,7 @@
   "meta.title": "Update",
   "scanItems": "Scan items...",
   "scanButton": "Scan",
+  "placeholder": "Scan a request barcode to get started",
   "checkInPrompt": "Scan item barcode to check in to ReShare",
   "column.hrid": "Request ID",
   "column.requester": "Requester",
