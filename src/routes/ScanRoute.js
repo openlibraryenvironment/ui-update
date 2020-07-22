@@ -4,7 +4,7 @@ import { FormattedMessage, injectIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import { stripesConnect } from '@folio/stripes/core';
-import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField } from '@folio/stripes/components';
+import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField, Layout } from '@folio/stripes/components';
 import { useOkapiKy } from '@folio/stripes-reshare';
 
 import ScanList from '../components/ScanList';
@@ -174,7 +174,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
         >
           <div className={css.emptyPlaceholder}>
             <img src={emptyPlaceholder} alt="" />
-            <FormattedMessage id="ui-update.placeholder" />
+            <Layout className="marginTop1"><FormattedMessage id="ui-update.placeholder" /></Layout>
           </div>
         </Pane>
       )}
