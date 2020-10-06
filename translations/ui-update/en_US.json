@@ -10,5 +10,7 @@
   "column.title": "Item Title",
   "error.dismissed": "Dialog dismissed before completing action",
   "error.noRequest": "No request found matching scanned id",
-  "error.notValidForState": "Action not valid for current state"
+  "error.notValidForState": "Action not valid for current state",
+
+  "permission.module.update.enabled": "UI: update module is enabled"
 }
