@@ -46,11 +46,10 @@ const ScanList = ({ scans, scanData, selectedScan, onRowClick }) => {
       // preventing this. Adding up to less than 100% is necessary to avoid
       // scrollbars introduced by some negative margin somewhere.
       columnWidths={{
-        status: '5%',
-        hrid: '30%',
-        requester: '10%',
-        supplier: '10%',
-        title: '44%',
+        status: { max: 40 },
+        hrid: { max: 100 },
+        requester: { min: 140 },
+        supplier: { min: 140 },
       }}
     />
   );
