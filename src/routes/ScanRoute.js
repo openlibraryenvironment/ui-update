@@ -32,7 +32,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
     updatedScanData[scannedAt] = { ...updatedScanData[scannedAt], ...newData };
     mutator.scanData.update({ [scannedAt]: updatedScanData[scannedAt] });
   };
-  const okapiKy = useOkapiKy();
+  const okapiKy = useOkapiKy().extend({ timeout: false });
 
   // mod-rs action names are translated in stripes-reshare, but some are specific to this app
   // TODO: this can easily be factored out into a hook once stripes-core upgrades react-intl
