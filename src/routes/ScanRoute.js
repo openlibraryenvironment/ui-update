@@ -41,7 +41,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
     if (`ui-update.actions.${action}` in intl.messages) {
       return intl.formatMessage({ id: `ui-update.actions.${action}${suffix}` });
     }
-    return intl.formatMessage({ id: `stripes-reshare.actions.${action}${suffix}` });
+    return intl.formatMessage({ id: `stripes-reshare.actions.${action}${suffix}` }, { errMsg: '' });
   };
 
   const getItemBarcode = () => {
@@ -203,7 +203,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
           )}
           {selData.status === STATUS.FAIL && (
             <MessageBanner type="error">
-              <KeyValue label={<FormattedMessage id={trAction(currentAction, '.error')} />}>
+              <KeyValue label={trAction(currentAction, '.error')}>
                 {selData.error?.message || ''}
               </KeyValue>
             </MessageBanner>
