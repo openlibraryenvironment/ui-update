@@ -2,7 +2,7 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage } from 'react-intl';
 import { Headline, KeyValue } from '@folio/stripes/components';
-import { CatalogInfo, RequesterSupplier } from '@folio/stripes-reshare/cards';
+import { CatalogInfo, RequesterSupplier } from '@reshare/stripes-reshare/cards';
 
 const SelectedRequest = ({ request }) => (
   <>
