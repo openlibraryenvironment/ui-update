@@ -1,6 +1,6 @@
 import React, { useRef, useState } from 'react';
 import PropTypes from 'prop-types';
-import { FormattedMessage, injectIntl } from 'react-intl';
+import { FormattedMessage, useIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import { stripesConnect, useOkapiKy } from '@folio/stripes/core';
@@ -20,7 +20,8 @@ import emptyPlaceholder from '../update-empty.svg';
 // from within the promise so it can be self-contained
 const itemModalHandlers = {};
 
-const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, scanData } }) => {
+const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanData } }) => {
+  const intl = useIntl();
   const [showItemModal, setShowItemModal] = useState(false);
   const itemModalInput = useRef();
   const scanInput = useRef();
@@ -79,7 +80,7 @@ const ScanRoute = ({ intl, mutator, resources: { currentAction, selScan, scans, 
       supplierCheckInToReshare: async (requestPromise, performAction) => {
         const itemBarcode = await getItemBarcode();
         const request = await requestPromise;
-        return performAction(request, 'supplierCheckInToReshare', { itemBarcode });
+        return performAction(request, 'supplierCheckInToReshare', { itemBarcodes: [{ itemId: itemBarcode }] });
       },
     };
 
@@ -245,4 +246,4 @@ ScanRoute.propTypes = {
   resources: PropTypes.object.isRequired,
 };
 
-export default stripesConnect(injectIntl(ScanRoute));
+export default stripesConnect(ScanRoute);
