@@ -1,6 +1,6 @@
 {
   "name": "@reshare/update",
-  "version": "1.4.0",
+  "version": "1.4.1",
   "description": "Quickly change the status of items. Part of the ReShare project.",
   "main": "src/index.js",
   "repository": "",
@@ -28,7 +28,7 @@
     "sinon": "^6.3.4"
   },
   "dependencies": {
-    "@reshare/stripes-reshare": "^1.0.0",
+    "@reshare/stripes-reshare": "^1.5.0",
     "classnames": "^2.2.6",
     "lodash": "^4.17.15",
     "prop-types": "^15.6.0",
