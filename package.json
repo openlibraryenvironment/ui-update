@@ -1,6 +1,6 @@
 {
   "name": "@reshare/update",
-  "version": "1.4.0",
+  "version": "1.4.2",
   "description": "Quickly change the status of items. Part of the ReShare project.",
   "main": "src/index.js",
   "repository": "",
