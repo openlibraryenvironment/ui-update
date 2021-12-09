@@ -5,6 +5,7 @@ import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import { stripesConnect, useOkapiKy } from '@folio/stripes/core';
 import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField, Layout } from '@folio/stripes/components';
+import { usePerformAction } from '@reshare/stripes-reshare';
 
 import ScanList from '../components/ScanList';
 import scanActions from '../scanActions';
@@ -24,6 +25,7 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
   const intl = useIntl();
   const [showItemModal, setShowItemModal] = useState(false);
   const itemModalInput = useRef();
+  const performAction = usePerformAction();
   const scanInput = useRef();
   const selData = scanData?.[selScan];
   const selReq = selData?.request;
@@ -75,20 +77,14 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
     mutator.scans.replace([scannedAt, ...scans]);
     mutator.selScan.replace(scannedAt);
 
-    // These take performAction even though it's defined in this scope in hopes of this one day being its own file
     const scanHandlers = {
-      supplierCheckInToReshare: async (requestPromise, performAction) => {
+      supplierCheckInToReshare: async (requestPromise) => {
         const itemBarcode = await getItemBarcode();
         const request = await requestPromise;
-        return performAction(request, 'supplierCheckInToReshare', { itemBarcodes: [{ itemId: itemBarcode }] });
+        return performAction(request, 'supplierCheckInToReshare',
+          { itemBarcodes: [{ itemId: itemBarcode }] },
+          { display: 'none' });
       },
-    };
-
-    const performAction = async (request, action, actionParams = {}) => {
-      if (!request.validActions.includes(action)) {
-        throw new Error(intl.formatMessage({ id: 'ui-update.error.notValidForState' }));
-      }
-      return okapiKy.post(`rs/patronrequests/${request.id}/performAction`, { json: { action, actionParams } });
     };
 
     // Reset form so user can proceed to scan the next item while this is loading
@@ -112,11 +108,11 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
 
     (async () => {
       if (currentAction in scanHandlers) {
-        await scanHandlers[currentAction](requestPromise, performAction);
+        await scanHandlers[currentAction](requestPromise);
       }
       const request = await requestPromise;
       if (!(currentAction in scanHandlers)) {
-        await performAction(request, currentAction);
+        await performAction(request, currentAction, {}, { display: 'none' });
       }
       const updated = await okapiKy.get(`rs/patronrequests/${request.id}`).json();
       updateThis({ request: updated, status: STATUS.SUCCESS });
@@ -241,7 +237,6 @@ ScanRoute.manifest = {
 };
 
 ScanRoute.propTypes = {
-  intl: PropTypes.object.isRequired,
   mutator: PropTypes.object.isRequired,
   resources: PropTypes.object.isRequired,
 };
