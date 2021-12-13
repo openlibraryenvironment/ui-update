@@ -205,7 +205,7 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
               </KeyValue>
             </MessageBanner>
           )}
-          {selReq && <SelectedRequest request={selReq} />}
+          {selReq && <SelectedRequest initialRequest={selReq} initialRequestTime={selScan} />}
         </Pane>
       )}
       <Modal
