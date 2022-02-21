@@ -1,0 +1,107 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+    <PropertyGroup>
+        <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+        <SchemaVersion>2.0</SchemaVersion>
+        <ProjectGuid>{7c43d936-08f9-464a-a1f7-feb2ae3c631a}</ProjectGuid>
+        <ProjectHome>.</ProjectHome>
+        <ProjectView>ShowAllFiles</ProjectView>
+        <StartupFile />
+        <WorkingDirectory>.</WorkingDirectory>
+        <OutputPath>.</OutputPath>
+        <ProjectTypeGuids>{3AF33F2E-1136-4D97-BBB7-1795711AC8B8};{349c5851-65df-11da-9384-00065b846f21};{9092AA53-FB77-4645-B42D-1CCCA6BD08BD}</ProjectTypeGuids>
+        <VisualStudioVersion Condition="'$(VisualStudioVersion)' == ''">17.0</VisualStudioVersion>
+        <VSToolsPath Condition="'$(VSToolsPath)' == ''">$(MSBuildExtensionsPath32)\Microsoft\VisualStudio\v$(VisualStudioVersion)</VSToolsPath>
+    </PropertyGroup>
+    <PropertyGroup Condition="'$(Configuration)' == 'Debug'" />
+    <PropertyGroup Condition="'$(Configuration)' == 'Release'" />
+    <ItemGroup>
+        <Content Include="package.json" />
+        <Content Include="CHANGELOG.md" />
+        <Content Include="CONTRIBUTING.md" />
+        <Content Include="README.md" />
+        <Content Include="icons\app.png" />
+        <Content Include="icons\app.svg" />
+        <Content Include="src\update-empty.svg" />
+        <Content Include="src\index.js" />
+        <Content Include="src\scanActions.js" />
+        <Content Include="src\scanStatus.js" />
+        <Content Include="src\components\ScanList.js" />
+        <Content Include="src\components\SelectedRequest.js" />
+        <Content Include="src\routes\ScanRoute.css" />
+        <Content Include="src\routes\ScanRoute.js" />
+        <Content Include="test\bigtest\.eslintrc.js" />
+        <Content Include="test\bigtest\index.js" />
+        <Content Include="test\bigtest\helpers\setup-application.js" />
+        <Content Include="test\bigtest\interactors\application.js" />
+        <Content Include="test\bigtest\interactors\example-page.js" />
+        <Content Include="test\bigtest\interactors\settings.js" />
+        <Content Include="test\bigtest\network\boot.js" />
+        <Content Include="test\bigtest\network\config.js" />
+        <Content Include="test\bigtest\network\index.js" />
+        <Content Include="test\bigtest\tests\application-test.js" />
+        <Content Include="test\bigtest\tests\example-page-test.js" />
+        <Content Include="test\bigtest\network\scenarios\default.js" />
+        <Content Include="translations\ui-update\en.json" />
+        <Content Include="translations\ui-update\en_US.json" />
+    </ItemGroup>
+    <ItemGroup>
+        <Folder Include="icons" />
+        <Folder Include="src" />
+        <Folder Include="src\components" />
+        <Folder Include="src\routes" />
+        <Folder Include="test" />
+        <Folder Include="test\bigtest" />
+        <Folder Include="test\bigtest\helpers" />
+        <Folder Include="test\bigtest\interactors" />
+        <Folder Include="test\bigtest\network" />
+        <Folder Include="test\bigtest\network\factories" />
+        <Folder Include="test\bigtest\network\models" />
+        <Folder Include="test\bigtest\network\scenarios" />
+        <Folder Include="test\bigtest\network\serializers" />
+        <Folder Include="test\bigtest\tests" />
+        <Folder Include="translations" />
+        <Folder Include="translations\ui-update" />
+        <Folder Include="Update" />
+    </ItemGroup>
+    <Import Project="$(MSBuildToolsPath)\Microsoft.Common.targets" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+    <Import Project="$(VSToolsPath)\Node.js Tools\Microsoft.NodejsToolsV2.targets" />
+    <ProjectExtensions>
+        <VisualStudio>
+          <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}">
+            <WebProjectProperties>
+              <UseIIS>False</UseIIS>
+              <AutoAssignPort>True</AutoAssignPort>
+              <DevelopmentServerPort>0</DevelopmentServerPort>
+              <DevelopmentServerVPath>/</DevelopmentServerVPath>
+              <IISUrl>http://localhost:48022/</IISUrl>
+              <NTLMAuthentication>False</NTLMAuthentication>
+              <UseCustomServer>True</UseCustomServer>
+              <CustomServerUrl>http://localhost:1337</CustomServerUrl>
+              <SaveServerSettingsInUserFile>False</SaveServerSettingsInUserFile>
+            </WebProjectProperties>
+          </FlavorProperties>
+          <FlavorProperties GUID="{349c5851-65df-11da-9384-00065b846f21}" User="">
+            <WebProjectProperties>
+              <StartPageUrl>
+              </StartPageUrl>
+              <StartAction>CurrentPage</StartAction>
+              <AspNetDebugging>True</AspNetDebugging>
+              <SilverlightDebugging>False</SilverlightDebugging>
+              <NativeDebugging>False</NativeDebugging>
+              <SQLDebugging>False</SQLDebugging>
+              <ExternalProgram>
+              </ExternalProgram>
+              <StartExternalURL>
+              </StartExternalURL>
+              <StartCmdLineArguments>
+              </StartCmdLineArguments>
+              <StartWorkingDirectory>
+              </StartWorkingDirectory>
+              <EnableENC>False</EnableENC>
+              <AlwaysStartWebServerOnDebug>False</AlwaysStartWebServerOnDebug>
+            </WebProjectProperties>
+          </FlavorProperties>
+        </VisualStudio>
+    </ProjectExtensions>
+</Project>
