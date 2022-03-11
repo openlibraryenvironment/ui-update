@@ -3,8 +3,10 @@ import { FormattedMessage } from 'react-intl';
 import { Headline, KeyValue } from '@folio/stripes/components';
 import { useOkapiQuery } from '@reshare/stripes-reshare';
 import { CatalogInfo, RequesterSupplier } from '@reshare/stripes-reshare/cards';
+import { useStripes } from '@folio/stripes/core';
 
 const SelectedRequest = ({ initialRequest, initialRequestTime }) => {
+  const stripes = useStripes();
   const q = useOkapiQuery(`rs/patronrequests/${initialRequest.id}`, {
     initialData: initialRequest,
     initialDataUpdatedAt: initialRequestTime,
@@ -17,7 +19,7 @@ const SelectedRequest = ({ initialRequest, initialRequestTime }) => {
       <KeyValue label={<FormattedMessage id="stripes-reshare.requestState" />}>
         <Headline size="large" faded><FormattedMessage id={`stripes-reshare.states.${request.state?.code}`} /></Headline>
       </KeyValue>
-      <CatalogInfo request={request} />
+      <CatalogInfo request={request} stripes={stripes} />
       <RequesterSupplier request={request} />
     </>
   );
