@@ -94,7 +94,8 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
     // choose to include logic that happens without waiting for the request or
     // merely await it.
     const requestPromise = (async () => {
-      const results = await okapiKy.get('rs/patronrequests', { searchParams: { filters: `hrid==${values.hrid}` } }).json();
+      // const results = await okapiKy.get('rs/patronrequests', { searchParams: { filters: `hrid==${values.hrid}` } }).json();
+      const results = await okapiKy.get('rs/patronrequests', { searchParams: `?filters=hrid==${values.hrid}&filters=isRequester==false` }).json();
       if (results?.length === 1) {
         const request = results[0];
         updateThis({ request });
