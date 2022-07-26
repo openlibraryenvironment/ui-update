@@ -94,8 +94,9 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
     // choose to include logic that happens without waiting for the request or
     // merely await it.
     const requestPromise = (async () => {
-      // const results = await okapiKy.get('rs/patronrequests', { searchParams: { filters: `hrid==${values.hrid}` } }).json();
-      const results = await okapiKy.get('rs/patronrequests', { searchParams: `?filters=hrid==${values.hrid}&filters=isRequester==false` }).json();
+      const results = await okapiKy.get('rs/patronrequests', { searchParams: { filters: `hrid==${values.hrid}` } }).json();
+      // When locally testing with requests where both sides (requester & supplier) exist on the same tenant, we can filter out one side
+      // const results = await okapiKy.get('rs/patronrequests', { searchParams: `?filters=hrid==${values.hrid}&filters=isRequester==false` }).json();
       if (results?.length === 1) {
         const request = results[0];
         updateThis({ request });
