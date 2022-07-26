@@ -1,4 +1,4 @@
-import React, { useRef, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import PropTypes from 'prop-types';
 import { FormattedMessage, useIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
@@ -8,12 +8,11 @@ import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, Pa
 import { usePerformAction } from '@reshare/stripes-reshare';
 
 import ScanList from '../components/ScanList';
-import scanActions from '../scanActions';
+import useScanActions from '../useScanActions';
 import STATUS from '../scanStatus';
 import SelectedRequest from '../components/SelectedRequest';
 import css from './ScanRoute.css';
 import emptyPlaceholder from '../update-empty.svg';
-
 
 // Need this outside the component as it gets re-rendered while the modal
 // is still up. When tidying this and breaking into separate files I'll
@@ -26,6 +25,7 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
   const [showItemModal, setShowItemModal] = useState(false);
   const itemModalInput = useRef();
   const performAction = usePerformAction();
+  const scanActions = useScanActions();
   const scanInput = useRef();
   const selData = scanData?.[selScan];
   const selReq = selData?.request;
@@ -36,6 +36,14 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
     mutator.scanData.update({ [scannedAt]: updatedScanData[scannedAt] });
   };
   const okapiKy = useOkapiKy().extend({ timeout: false });
+  useEffect(() => {
+    if (scanActions && !currentAction) {
+      mutator.currentAction.replace(scanActions[0]);
+    }
+  });
+
+  // wait for actions to load and pick the first one
+  if (scanActions === null || currentAction === null) return null;
 
   // mod-rs action names are translated in stripes-reshare, but some are specific to this app
   // TODO: this can easily be factored out into a hook once stripes-core upgrades react-intl
@@ -77,14 +85,17 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
     mutator.scans.replace([scannedAt, ...scans]);
     mutator.selScan.replace(scannedAt);
 
+    const promptForItem = action => async (requestPromise) => {
+      const itemBarcode = await getItemBarcode();
+      const request = await requestPromise;
+      return performAction(request, action,
+        { itemBarcodes: [{ itemId: itemBarcode }] },
+        { display: 'none' });
+    };
+
     const scanHandlers = {
-      supplierCheckInToReshare: async (requestPromise) => {
-        const itemBarcode = await getItemBarcode();
-        const request = await requestPromise;
-        return performAction(request, 'supplierCheckInToReshare',
-          { itemBarcodes: [{ itemId: itemBarcode }] },
-          { display: 'none' });
-      },
+      supplierCheckInToReshare: promptForItem('supplierCheckInToReshare'),
+      supplierCheckInToReshareAndSupplierMarkShipped: promptForItem('supplierCheckInToReshareAndSupplierMarkShipped'),
     };
 
     // Reset form so user can proceed to scan the next item while this is loading
@@ -232,7 +243,7 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
 };
 
 ScanRoute.manifest = {
-  currentAction: { initialValue: scanActions[0] },
+  currentAction: { initialValue: null },
   selScan: {},
   scans: { initialValue: [] },
   scanData: { initialValue: {} },
