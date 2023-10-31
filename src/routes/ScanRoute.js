@@ -154,7 +154,7 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
                 <Col xs={6}>
                   <Form
                     onSubmit={onSubmit}
-                    render={({ handleSubmit, form }) => (
+                    render={({ handleSubmit }) => (
                       <form onSubmit={handleSubmit}>
                         <Field name="hrid" component={TextField} marginBottom0 inputRef={scanInput} autoFocus placeholder="Scan or enter barcode..." />
                       </form>
