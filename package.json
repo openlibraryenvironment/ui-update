@@ -23,7 +23,7 @@
     "react-final-form": "^6.3.0"
   },
   "peerDependencies": {
-    "@folio/stripes": "^6.1.0 || ^7.0.0",
+    "@folio/stripes": "^6.1.0 || ^7.0.0 || ^8.0.0",
     "react": "*",
     "react-intl": "^5.8.0",
     "react-router-dom": "^5.2.0"
