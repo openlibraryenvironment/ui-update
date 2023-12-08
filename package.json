@@ -1,6 +1,6 @@
 {
   "name": "@projectreshare/update",
-  "version": "1.8.2",
+  "version": "1.8.1",
   "description": "Quickly change the status of items. Part of the ReShare project.",
   "main": "src/index.js",
   "repository": "",
@@ -27,6 +27,10 @@
     "react": "*",
     "react-intl": "^5.8.0",
     "react-router-dom": "^5.2.0"
+  },
+  "resolutions": {
+        "@rehooks/local-storage": "2.4.4",
+        "postcss-nesting" : "^10.0.0"
   },
   "stripes": {
     "actsAs": [
