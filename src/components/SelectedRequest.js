@@ -1,8 +1,8 @@
 import React from 'react';
 import { FormattedMessage } from 'react-intl';
 import { Headline, KeyValue } from '@folio/stripes/components';
-import { useOkapiQuery } from '@reshare/stripes-reshare';
-import { CatalogInfo, RequesterSupplier } from '@reshare/stripes-reshare/cards';
+import { useOkapiQuery } from '@projectreshare/stripes-reshare';
+import { CatalogInfo, RequesterSupplier } from '@projectreshare/stripes-reshare/cards';
 import { useStripes } from '@folio/stripes/core';
 
 const SelectedRequest = ({ initialRequest, initialRequestTime }) => {

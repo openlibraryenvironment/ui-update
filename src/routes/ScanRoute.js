@@ -5,7 +5,7 @@ import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import { stripesConnect, useOkapiKy } from '@folio/stripes/core';
 import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField, Layout } from '@folio/stripes/components';
-import { usePerformAction } from '@reshare/stripes-reshare';
+import { usePerformAction } from '@projectreshare/stripes-reshare';
 
 import ScanList from '../components/ScanList';
 import useScanActions from '../useScanActions';

@@ -1,4 +1,4 @@
-import { useOkapiQuery } from '@reshare/stripes-reshare';
+import { useOkapiQuery } from '@projectreshare/stripes-reshare';
 
 export default () => {
   const settingsQuery = useOkapiQuery('rs/settings/appSettings', {
