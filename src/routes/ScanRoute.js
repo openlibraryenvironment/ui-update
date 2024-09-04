@@ -4,7 +4,7 @@ import { FormattedMessage, useIntl } from 'react-intl';
 import { Form, Field } from 'react-final-form';
 import _ from 'lodash';
 import { stripesConnect, useOkapiKy } from '@folio/stripes/core';
-import { KeyValue, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField, Layout } from '@folio/stripes/components';
+import { KeyValue, Layout, MessageBanner, Modal, Row, Col, Pane, Paneset, PaneHeader, PaneHeaderIconButton, PaneMenu, Select, TextField, Tooltip } from '@folio/stripes/components';
 import { usePerformAction } from '@projectreshare/stripes-reshare';
 
 import ScanList from '../components/ScanList';
@@ -198,11 +198,20 @@ const ScanRoute = ({ mutator, resources: { currentAction, selScan, scans, scanDa
           )}
           lastMenu={selReq?.id &&
             <PaneMenu>
-              <PaneHeaderIconButton
-                key="icon-request"
-                icon="document"
-                to={`${selReq.isRequester ? 'request' : 'supply'}/requests/view/${selReq.id}`}
-              />
+              <Tooltip
+                id="rs-local-note-tooltip"
+                text={<FormattedMessage id="ui-update.requestLink" />}
+              >
+                {({ ref, ariaIds }) => (
+                  <PaneHeaderIconButton
+                    key="icon-request"
+                    icon="document"
+                    to={`${selReq.isRequester ? 'request' : 'supply'}/requests/view/${selReq.id}`}
+                    aria-labelledby={ariaIds.text}
+                    ref={ref}
+                  />
+                )}
+              </Tooltip>
             </PaneMenu>
           }
         >
