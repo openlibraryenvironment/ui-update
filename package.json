@@ -16,7 +16,7 @@
     "eslint": "^7.0.0"
   },
   "dependencies": {
-    "@projectreshare/stripes-reshare": "^1.0.0",
+    "@projectreshare/stripes-reshare": "^2.0.0",
     "classnames": "^2.2.6",
     "lodash": "^4.17.15",
     "prop-types": "^15.6.0",
