@@ -2,6 +2,10 @@
   "name": "@projectreshare/update",
   "version": "1.10.2",
   "description": "Quickly change the status of items. Part of the ReShare project.",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/openlibraryenvironment/ui-update"
+  },
   "main": "src/index.js",
   "repository": "",
   "license": "Apache-2.0",
